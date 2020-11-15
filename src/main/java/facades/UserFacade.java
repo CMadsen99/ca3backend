@@ -1,5 +1,6 @@
 package facades;
 
+import dto.AddressDTO;
 import entities.User;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -41,6 +42,19 @@ public class UserFacade {
             em.close();
         }
         return user;
+    }
+    
+    public AddressDTO getAddress(String username) {
+        EntityManager em = emf.createEntityManager();
+        User user;
+        AddressDTO aDTO;
+        try {
+            user = em.find(User.class, username);
+            aDTO = new AddressDTO(user.getAddress());
+        } finally {
+            em.close();
+        }
+        return aDTO;
     }
 
 }

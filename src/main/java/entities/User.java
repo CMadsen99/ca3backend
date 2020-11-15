@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -19,74 +20,84 @@ import org.mindrot.jbcrypt.BCrypt;
 @Table(name = "users")
 public class User implements Serializable {
 
-  private static final long serialVersionUID = 1L;
-  @Id
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "user_name", length = 25)
-  private String userName;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1, max = 255)
-  @Column(name = "user_pass")
-  private String userPass;
-  @JoinTable(name = "user_roles", joinColumns = {
-    @JoinColumn(name = "user_name", referencedColumnName = "user_name")}, inverseJoinColumns = {
-    @JoinColumn(name = "role_name", referencedColumnName = "role_name")})
-  @ManyToMany
-  private List<Role> roleList = new ArrayList<>();
-
-  public List<String> getRolesAsStrings() {
-    if (roleList.isEmpty()) {
-      return null;
-    }
-    List<String> rolesAsStrings = new ArrayList<>();
-    roleList.forEach((role) -> {
-        rolesAsStrings.add(role.getRoleName());
-      });
-    return rolesAsStrings;
-  }
-
-  public User() {}
-
-  //TODO Change when password is hashed
-   public boolean verifyPassword(String pw){
-        return(BCrypt.checkpw(pw, userPass));
+    private static final long serialVersionUID = 1L;
+    @Id
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "user_name", length = 25)
+    private String userName;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "user_pass")
+    private String userPass;
+    @JoinTable(name = "user_roles", joinColumns = {
+        @JoinColumn(name = "user_name", referencedColumnName = "user_name")}, inverseJoinColumns = {
+        @JoinColumn(name = "role_name", referencedColumnName = "role_name")})
+    @ManyToMany
+    private List<Role> roleList = new ArrayList<>();
+    @ManyToOne
+    private Address address;
+    
+    public List<String> getRolesAsStrings() {
+        if (roleList.isEmpty()) {
+            return null;
+        }
+        List<String> rolesAsStrings = new ArrayList<>();
+        roleList.forEach((role) -> {
+            rolesAsStrings.add(role.getRoleName());
+        });
+        return rolesAsStrings;
     }
 
-  public User(String userName, String userPass) {
-    this.userName = userName;
+    public User() {
+    }
 
-    this.userPass = BCrypt.hashpw(userPass, BCrypt.gensalt(5));;
-  }
+    //TODO Change when password is hashed
+    public boolean verifyPassword(String pw) {
+        return (BCrypt.checkpw(pw, userPass));
+    }
 
+    public User(String userName, String userPass) {
+        this.userName = userName;
 
-  public String getUserName() {
-    return userName;
-  }
+        this.userPass = BCrypt.hashpw(userPass, BCrypt.gensalt(5));;
+    }
 
-  public void setUserName(String userName) {
-    this.userName = userName;
-  }
+    public String getUserName() {
+        return userName;
+    }
 
-  public String getUserPass() {
-    return this.userPass;
-  }
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-  public void setUserPass(String userPass) {
-    this.userPass = userPass;
-  }
+    public String getUserPass() {
+        return this.userPass;
+    }
 
-  public List<Role> getRoleList() {
-    return roleList;
-  }
+    public void setUserPass(String userPass) {
+        this.userPass = userPass;
+    }
 
-  public void setRoleList(List<Role> roleList) {
-    this.roleList = roleList;
-  }
+    public List<Role> getRoleList() {
+        return roleList;
+    }
 
-  public void addRole(Role userRole) {
-    roleList.add(userRole);
-  }
+    public void setRoleList(List<Role> roleList) {
+        this.roleList = roleList;
+    }
+
+    public void addRole(Role userRole) {
+        roleList.add(userRole);
+    }
+    
+     public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 
 }

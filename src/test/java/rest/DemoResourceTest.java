@@ -1,5 +1,6 @@
 package rest;
 
+import entities.Address;
 import entities.RenameMe;
 import entities.Role;
 import entities.User;
@@ -29,7 +30,7 @@ public class DemoResourceTest {
 
     private static final int SERVER_PORT = 7777;
     private static final String SERVER_URL = "http://localhost/api";
-    private static User u1, u2;
+    private static User user, admin, both;
 
     static final URI BASE_URI = UriBuilder.fromUri(SERVER_URL).port(SERVER_PORT).build();
     private static HttpServer httpServer;
@@ -72,22 +73,30 @@ public class DemoResourceTest {
             //Delete existing users and roles to get a "fresh" database
             em.createQuery("delete from User").executeUpdate();
             em.createQuery("delete from Role").executeUpdate();
+            em.createQuery("delete from Address").executeUpdate();
+
+            Address address = new Address("Bygade", 5);
+            Address address2 = new Address("Hovedgade", 25);
+            user = new User("user", "hello");
+            admin = new User("admin", "with");
+            both = new User("user_admin", "you");
 
             Role userRole = new Role("user");
             Role adminRole = new Role("admin");
-            User user = new User("user", "test");
             user.addRole(userRole);
-            User admin = new User("admin", "test");
             admin.addRole(adminRole);
-            User both = new User("user_admin", "test");
             both.addRole(userRole);
             both.addRole(adminRole);
+            address.addUser(user);
+            address.addUser(admin);
+            address2.addUser(both);
+            em.persist(address);
+            em.persist(address2);
             em.persist(userRole);
             em.persist(adminRole);
             em.persist(user);
             em.persist(admin);
             em.persist(both);
-            //System.out.println("Saved test data to database");
             em.getTransaction().commit();
         } finally {
             em.close();
@@ -147,7 +156,7 @@ public class DemoResourceTest {
 
     @Test
     public void testGetJokes() {
-        login("user", "test");
+        login("user", "hello");
         given()
                 .contentType("application/json")
                 .accept(ContentType.JSON)
@@ -161,4 +170,33 @@ public class DemoResourceTest {
                 .body("dJokeID", notNullValue());
     }
 
+    @Test
+    public void testGetFacts() {
+        login("admin", "with");
+        given()
+                .contentType("application/json")
+                .accept(ContentType.JSON)
+                .header("x-access-token", securityToken)
+                .when()
+                .get("/info/facts").then()
+                .statusCode(200)
+                .body("cType", notNullValue())
+                .body("cText", notNullValue())
+                .body("dType", notNullValue())
+                .body("dText", notNullValue());
+    }
+    
+    @Test
+    public void testGetAddress() {
+        login("user", "hello");
+        given()
+                .contentType("application/json")
+                .accept(ContentType.JSON)
+                .header("x-access-token", securityToken)
+                .when()
+                .get("/info/address").then()
+                .statusCode(200)
+                .body("street", equalTo(admin.getAddress().getStreet()))
+                .body("houseNumber", equalTo(admin.getAddress().getHouseNumber()));
+    }
 }
